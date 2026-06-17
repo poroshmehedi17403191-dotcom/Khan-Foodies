@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Minus, Plus, Star, ShoppingBag, Truck, ChevronRight, Check } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -11,9 +10,10 @@ import { PromoBanner } from '@/components/promo-banner';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/button';
 import { FreeDeliveryBadge } from '@/components/free-delivery-badge';
+import { StorefrontCartCheckout } from '@/components/storefront-cart-checkout';
 import { Category, Product, SiteContent, ShippingCharge } from '@/lib/types';
 import { getProductImages, getProductPath } from '@/lib/product-helpers';
-import { addProductToCart, cartItemCount, readCart } from '@/lib/cart-client';
+import { useStorefrontCart } from '@/hooks/use-storefront-cart';
 import { t } from '@/lib/i18n-bn';
 
 type ProductDetailClientProps = {
@@ -25,43 +25,54 @@ type ProductDetailClientProps = {
   shippingCharges: ShippingCharge[];
 };
 
+type ToastMessage = { id: number; message: string; type: 'success' | 'error' | 'info' };
+
 export function ProductDetailClient({
   product,
   category,
   related,
   categories,
   siteContent,
+  shippingCharges,
 }: ProductDetailClientProps) {
-  const router = useRouter();
   const images = getProductImages(product);
   const [activeImage, setActiveImage] = useState(product.image || images[0] || '');
   const [qty, setQty] = useState(1);
-  const [cartCount, setCartCount] = useState(0);
-  const [added, setAdded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const toastCounterRef = useRef(0);
 
-  useEffect(() => {
-    setCartCount(cartItemCount(readCart()));
-  }, []);
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    toastCounterRef.current += 1;
+    const id = toastCounterRef.current;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  };
+
+  const cartState = useStorefrontCart(shippingCharges, { onToast: showToast });
 
   const discounted = product.price * (1 - product.discount / 100);
   const isOutOfStock = product.stock <= 0;
 
   const handleAddToCart = () => {
-    addProductToCart(product, qty);
-    setCartCount(cartItemCount(readCart()));
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    cartState.addToCart(product, qty, { openCart: true });
+  };
+
+  const handleBuyNow = () => {
+    cartState.addToCart(product, qty, { openCart: false, openCheckout: true });
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--kf-bg)]">
       <PromoBanner />
       <Navbar
-        cartCount={cartCount}
-        onCartOpen={() => router.push('/?cart=1')}
+        cartCount={cartState.cartCount}
+        onCartOpen={() => cartState.setShowCart(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        sectionBase="/"
       />
 
       <main className="flex-1 kf-container px-2 sm:px-4 py-6 sm:py-10">
@@ -81,18 +92,18 @@ export function ProductDetailClient({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14">
           <div className="space-y-3">
-            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-[var(--kf-border)] shadow-sm">
+            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-[var(--kf-border)] shadow-sm group cursor-zoom-in">
               <Image
                 src={activeImage}
                 alt={product.nameBn || product.name}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.12]"
                 priority
                 referrerPolicy="no-referrer"
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
               {product.freeShipping && (
-                <div className="absolute bottom-4 left-4">
+                <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
                   <FreeDeliveryBadge size="md" />
                 </div>
               )}
@@ -194,18 +205,10 @@ export function ProductDetailClient({
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button fullWidth size="lg" disabled={isOutOfStock} onClick={handleAddToCart}>
-                  {added ? (
-                    <>
-                      <Check className="w-5 h-5" /> Added!
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingBag className="w-5 h-5" />
-                      {isOutOfStock ? t.outOfStock : t.addToCartFull}
-                    </>
-                  )}
+                  <ShoppingBag className="w-5 h-5" />
+                  {isOutOfStock ? t.outOfStock : t.addToCartFull}
                 </Button>
-                <Button variant="outline" fullWidth size="lg" onClick={() => router.push('/?cart=1')}>
+                <Button variant="outline" fullWidth size="lg" disabled={isOutOfStock} onClick={handleBuyNow}>
                   {t.checkout}
                 </Button>
               </div>
@@ -238,10 +241,7 @@ export function ProductDetailClient({
                       index={idx}
                       categoryLabel={catMatch?.nameBn || catMatch?.name || p.category}
                       productHref={getProductPath(p, categories)}
-                      onAddToCart={() => {
-                        addProductToCart(p, 1);
-                        setCartCount(cartItemCount(readCart()));
-                      }}
+                      onAddToCart={() => cartState.addToCart(p, 1, { openCart: true })}
                     />
                   );
                 })}
@@ -251,7 +251,28 @@ export function ProductDetailClient({
         )}
       </main>
 
-      <Footer siteContent={siteContent} categories={categories} />
+      <Footer siteContent={siteContent} categories={categories} sectionBase="/" />
+
+      <StorefrontCartCheckout cartState={cartState} />
+
+      {toasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 pointer-events-none">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-sm font-semibold text-white animate-in slide-in-from-right ${
+                toast.type === 'error'
+                  ? 'bg-red-600'
+                  : toast.type === 'info'
+                    ? 'bg-stone-800'
+                    : 'bg-emerald-600'
+              }`}
+            >
+              {toast.message}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

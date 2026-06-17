@@ -13,16 +13,26 @@ interface NavbarProps {
   onCartOpen: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  /** Prefix for in-page section links — use "/" on product detail pages */
+  sectionBase?: string;
 }
 
 const NAV_LINKS = [
-  { href: '#products', label: t.navProducts },
-  { href: '#gallery', label: t.galleryTitle },
-  { href: '#reviews', label: t.navReviews },
-  { href: '#faq', label: t.navFaq },
-];
+  { hash: 'products', label: t.navProducts },
+  { hash: 'gallery', label: t.galleryTitle },
+  { hash: 'reviews', label: t.navReviews },
+  { hash: 'faq', label: t.navFaq },
+] as const;
 
-function NavLink({ href, label, onClick }: { href: string; label: string; onClick?: () => void }) {
+function NavLink({
+  href,
+  label,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  onClick?: () => void;
+}) {
   return (
     <a href={href} onClick={onClick} className="relative overflow-hidden h-6 group text-[var(--kf-text)]">
       <span className="block group-hover:-translate-y-full transition-transform duration-300">{label}</span>
@@ -33,11 +43,18 @@ function NavLink({ href, label, onClick }: { href: string; label: string; onClic
   );
 }
 
-export function Navbar({ cartCount, onCartOpen, searchQuery, onSearchChange }: NavbarProps) {
+export function Navbar({
+  cartCount,
+  onCartOpen,
+  searchQuery,
+  onSearchChange,
+  sectionBase = '',
+}: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   const closeMobile = () => setMobileOpen(false);
+  const sectionHref = (hash: string) => `${sectionBase}#${hash}`;
 
   return (
     <header className="sticky top-0 z-40 py-3">
@@ -47,9 +64,9 @@ export function Navbar({ cartCount, onCartOpen, searchQuery, onSearchChange }: N
         </Link>
 
         <div className="hidden md:flex items-center gap-5 lg:gap-6 ml-6 lg:ml-8">
-          <NavLink href="#categories" label={t.navHome} />
+          <NavLink href={sectionHref('categories')} label={t.navHome} />
           {NAV_LINKS.map((link) => (
-            <NavLink key={link.href} href={link.href} label={link.label} />
+            <NavLink key={link.hash} href={sectionHref(link.hash)} label={link.label} />
           ))}
         </div>
 
@@ -88,11 +105,11 @@ export function Navbar({ cartCount, onCartOpen, searchQuery, onSearchChange }: N
             )}
           </button>
 
-          <a href="#contact" className="kf-btn kf-btn-outline kf-btn--sm whitespace-nowrap">
+          <a href={sectionHref('contact')} className="kf-btn kf-btn-outline kf-btn--sm whitespace-nowrap">
             {t.navContact}
           </a>
 
-          <GlowLink href="#products" innerClassName="text-sm px-4 py-2 whitespace-nowrap">
+          <GlowLink href={sectionHref('products')} innerClassName="text-sm px-4 py-2 whitespace-nowrap">
             {t.shopNow}
           </GlowLink>
 
@@ -139,16 +156,16 @@ export function Navbar({ cartCount, onCartOpen, searchQuery, onSearchChange }: N
               />
             </div>
 
-            <NavLink href="#categories" label={t.navHome} onClick={closeMobile} />
+            <NavLink href={sectionHref('categories')} label={t.navHome} onClick={closeMobile} />
             {NAV_LINKS.map((link) => (
-              <NavLink key={link.href} href={link.href} label={link.label} onClick={closeMobile} />
+              <NavLink key={link.hash} href={sectionHref(link.hash)} label={link.label} onClick={closeMobile} />
             ))}
 
-            <a href="#contact" onClick={closeMobile} className="w-full text-center kf-btn kf-btn-outline kf-btn--sm">
+            <a href={sectionHref('contact')} onClick={closeMobile} className="w-full text-center kf-btn kf-btn-outline kf-btn--sm">
               {t.navContact}
             </a>
 
-            <GlowLink href="#products" className="w-full" innerClassName="w-full text-center text-sm px-4 py-2.5" onClick={closeMobile}>
+            <GlowLink href={sectionHref('products')} className="w-full" innerClassName="w-full text-center text-sm px-4 py-2.5" onClick={closeMobile}>
               {t.shopNow}
             </GlowLink>
 

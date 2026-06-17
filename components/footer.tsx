@@ -9,6 +9,8 @@ interface FooterProps {
   siteContent: SiteContent | null;
   categories: Category[];
   onCategorySelect?: (name: string) => void;
+  /** Prefix for in-page section links — use "/" on product detail pages */
+  sectionBase?: string;
 }
 
 function SocialIcon({ href, label, children }: { href?: string; label: string; children: React.ReactNode }) {
@@ -20,10 +22,11 @@ function SocialIcon({ href, label, children }: { href?: string; label: string; c
   );
 }
 
-export function Footer({ siteContent, categories, onCategorySelect }: FooterProps) {
+export function Footer({ siteContent, categories, onCategorySelect, sectionBase = '' }: FooterProps) {
   const fb = siteContent?.facebookUrl;
   const ig = siteContent?.instagramUrl;
   const yt = siteContent?.youtubeUrl;
+  const sectionHref = (hash: string) => `${sectionBase}#${hash}`;
 
   return (
     <div className="font-[family-name:var(--font-geist)] bg-[var(--kf-footer-outer)] pt-16 sm:pt-20 px-4">
@@ -71,10 +74,10 @@ export function Footer({ siteContent, categories, onCategorySelect }: FooterProp
             <div>
               <h3 className="font-medium text-sm mb-4 text-[var(--kf-peach)]">{t.footerQuickLinks}</h3>
               <ul className="space-y-3 text-sm text-white/75">
-                <li><a href="#categories" className="hover:text-[var(--kf-peach)] transition">{t.footerProducts}</a></li>
-                <li><a href="#products" className="hover:text-[var(--kf-peach)] transition">{t.footerShowcase}</a></li>
-                <li><a href="#gallery" className="hover:text-[var(--kf-peach)] transition">{t.galleryTitle}</a></li>
-                <li><a href="#reviews" className="hover:text-[var(--kf-peach)] transition">{t.footerStories}</a></li>
+                <li><a href={sectionHref('categories')} className="hover:text-[var(--kf-peach)] transition">{t.footerProducts}</a></li>
+                <li><a href={sectionHref('products')} className="hover:text-[var(--kf-peach)] transition">{t.footerShowcase}</a></li>
+                <li><a href={sectionHref('gallery')} className="hover:text-[var(--kf-peach)] transition">{t.galleryTitle}</a></li>
+                <li><a href={sectionHref('reviews')} className="hover:text-[var(--kf-peach)] transition">{t.footerStories}</a></li>
               </ul>
             </div>
 
@@ -101,16 +104,16 @@ export function Footer({ siteContent, categories, onCategorySelect }: FooterProp
             <div className="col-span-2 md:col-span-1">
               <h3 className="font-medium text-sm mb-4 text-[var(--kf-peach)]">{t.footerSupport}</h3>
               <ul className="space-y-3 text-sm text-white/75">
-                <li><a href="#app-download" className="hover:text-[var(--kf-peach)] transition">{t.appInstallTitle}</a></li>
-                <li><a href="#about" className="hover:text-[var(--kf-peach)] transition">{t.aboutBadge}</a></li>
-                <li><a href="#faq" className="hover:text-[var(--kf-peach)] transition">{t.faqTitle}</a></li>
+                <li><a href={sectionHref('app-download')} className="hover:text-[var(--kf-peach)] transition">{t.appInstallTitle}</a></li>
+                <li><a href={sectionHref('about')} className="hover:text-[var(--kf-peach)] transition">{t.aboutBadge}</a></li>
+                <li><a href={sectionHref('faq')} className="hover:text-[var(--kf-peach)] transition">{t.faqTitle}</a></li>
                 <li className="flex items-center gap-2 flex-wrap">
-                  <a href="#contact" className="hover:text-[var(--kf-peach)] transition">{t.navContact}</a>
+                  <a href={sectionHref('contact')} className="hover:text-[var(--kf-peach)] transition">{t.navContact}</a>
                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--kf-navy-dark)] border border-[var(--kf-peach)]/50 text-[var(--kf-peach)]">
                     COD
                   </span>
                 </li>
-                <li><a href="#contact" className="hover:text-[var(--kf-peach)] transition">{t.privacy}</a></li>
+                <li><a href={sectionHref('contact')} className="hover:text-[var(--kf-peach)] transition">{t.privacy}</a></li>
                 <li>
                   <Link href="/admin" className="hover:text-[var(--kf-peach)] transition text-[var(--kf-peach)] font-medium">
                     {t.secretAdmin}
