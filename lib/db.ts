@@ -5,6 +5,8 @@ import {
   DEFAULT_HERO_IMAGES,
   DEFAULT_REVIEW_AVATAR,
 } from './defaults';
+import { slugify } from './slug';
+import { normalizeProductImages } from './product-helpers';
 import type {
   Category,
   Product,
@@ -37,6 +39,7 @@ function mapProduct(p: {
   id: string;
   name: string;
   nameBn: string | null;
+  slug?: string | null;
   price: number;
   discount: number;
   description: string;
@@ -46,12 +49,15 @@ function mapProduct(p: {
   status: string;
   rating: number;
   image: string;
+  images?: string[];
   freeShipping?: boolean | null;
 }): Product {
+  const normalized = normalizeProductImages(p.image, p.images);
   return {
     id: p.id,
     name: p.name,
     nameBn: p.nameBn ?? undefined,
+    slug: p.slug ?? undefined,
     price: p.price,
     discount: p.discount,
     description: p.description,
@@ -60,7 +66,8 @@ function mapProduct(p: {
     stock: p.stock,
     status: p.status as Product['status'],
     rating: p.rating,
-    image: p.image,
+    image: normalized.image,
+    images: normalized.images,
     freeShipping: p.freeShipping ?? false,
   };
 }
@@ -196,6 +203,9 @@ export const db = {
   saveProduct: async (
     product: Omit<Product, 'id' | 'rating'> & { id?: string; rating?: number }
   ): Promise<Product> => {
+    const normalized = normalizeProductImages(product.image, product.images);
+    const slug = product.slug?.trim() || slugify(product.name);
+
     if (product.id) {
       const existing = await prisma.product.findUnique({ where: { id: product.id } });
       const updated = await prisma.product.update({
@@ -203,6 +213,7 @@ export const db = {
         data: {
           name: product.name,
           nameBn: product.nameBn,
+          slug,
           price: Number(product.price),
           discount: Number(product.discount || 0),
           description: product.description || '',
@@ -210,7 +221,8 @@ export const db = {
           category: product.category,
           stock: Number(product.stock || 0),
           status: product.status || 'Active',
-          image: product.image,
+          image: normalized.image,
+          images: normalized.images,
           rating: existing?.rating ?? product.rating ?? 4.8,
           freeShipping: Boolean(product.freeShipping),
         },
@@ -223,6 +235,7 @@ export const db = {
         id: `prod-${Date.now()}`,
         name: product.name,
         nameBn: product.nameBn,
+        slug,
         price: Number(product.price),
         discount: Number(product.discount || 0),
         description: product.description || '',
@@ -233,11 +246,43 @@ export const db = {
         rating: 4.8,
         freeShipping: Boolean(product.freeShipping),
         image:
-          product.image ||
+          normalized.image ||
           'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&q=80&w=600',
+        images: normalized.images.length
+          ? normalized.images
+          : [
+              normalized.image ||
+                'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&q=80&w=600',
+            ],
       },
     });
     return mapProduct(created);
+  },
+
+  getProductPageData: async (
+    categorySlug: string,
+    productSlug: string
+  ): Promise<{ product: Product; category: Category; related: Product[] } | null> => {
+    const categoryRow = await prisma.category.findFirst({ where: { slug: categorySlug } });
+    if (!categoryRow) return null;
+
+    const category = mapCategory(categoryRow);
+    const rows = await prisma.product.findMany({
+      where: { category: category.name, status: 'Active' },
+    });
+
+    const match = rows.find(
+      (p) => p.slug === productSlug || slugify(p.name) === productSlug
+    );
+    if (!match) return null;
+
+    const product = mapProduct(match);
+    const related = rows
+      .filter((p) => p.id !== match.id)
+      .slice(0, 4)
+      .map(mapProduct);
+
+    return { product, category, related };
   },
 
   deleteProduct: async (id: string): Promise<boolean> => {

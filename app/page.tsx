@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getProductPath } from '@/lib/product-helpers';
 import { getStoreData, placeStoreOrder, submitContactAction, submitReviewAction } from './actions';
 import {
   trackAddToCartMetaAction,
@@ -216,6 +217,12 @@ export default function StorefrontPage() {
   };
 
   // Load store data initially
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('cart') === '1') {
+      setShowCart(true);
+    }
+  }, []);
+
   useEffect(() => {
     async function loadData() {
       const res = await getStoreData();
@@ -712,8 +719,8 @@ export default function StorefrontPage() {
                       product={p}
                       index={idx}
                       categoryLabel={catMatch?.nameBn || catMatch?.name || p.category}
+                      productHref={getProductPath(p, categories)}
                       onAddToCart={() => addToCart(p, 1)}
-                      onImageClick={() => openProductDetails(p)}
                     />
                   );
                 })}

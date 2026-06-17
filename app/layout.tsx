@@ -5,7 +5,8 @@ import './product-cards.css';
 import './gallery.css';
 import { JsonLd } from '@/components/json-ld';
 import { MetaPixel } from '@/components/meta-pixel';
-import { Providers } from './providers';
+import { SiteThemeStyles } from '@/components/site-theme-styles';
+import { Providers } from '@/app/providers';
 
 const themeScript = `(function(){try{var t=localStorage.getItem('khanfoods-theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
 
@@ -108,13 +109,14 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" className={`${inter.variable} ${playfair.variable} ${poppins.variable} ${geist.variable} scroll-smooth`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
+        <SiteThemeStyles />
         <JsonLd />
         <MetaPixel />
         <Providers>{children}</Providers>

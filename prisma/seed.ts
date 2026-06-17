@@ -5,6 +5,7 @@ import {
   DEFAULT_HERO_IMAGES,
   DEFAULT_REVIEW_AVATAR,
 } from '../lib/defaults';
+import { slugify } from '../lib/slug';
 
 const prisma = new PrismaClient();
 
@@ -29,6 +30,7 @@ const defaultProducts = [
     status: 'Active',
     rating: 4.9,
     image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&q=80&w=600',
+    slug: 'rajshahi-himsagar-premium-mango',
   },
   {
     id: 'prod-2',
@@ -43,6 +45,7 @@ const defaultProducts = [
     status: 'Active',
     rating: 4.8,
     image: 'https://images.unsplash.com/photo-1591073113125-e46713c829ed?auto=format&fit=crop&q=80&w=600',
+    slug: 'premium-gopalbhog-sweet-mango',
   },
   {
     id: 'prod-3',
@@ -57,6 +60,7 @@ const defaultProducts = [
     status: 'Active',
     rating: 4.7,
     image: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&q=80&w=600',
+    slug: 'organic-sweet-amrapali-mango',
   },
   {
     id: 'prod-4',
@@ -71,6 +75,7 @@ const defaultProducts = [
     status: 'Active',
     rating: 5.0,
     image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=600',
+    slug: 'royal-mango-blossom-honey',
   },
   {
     id: 'prod-5',
@@ -85,6 +90,7 @@ const defaultProducts = [
     status: 'Active',
     rating: 4.9,
     image: 'https://images.unsplash.com/photo-1595981267035-7b04ec82a897?auto=format&fit=crop&q=80&w=600',
+    slug: 'premium-sun-dried-mango-bars-amsotto',
   },
   {
     id: 'prod-6',
@@ -99,6 +105,7 @@ const defaultProducts = [
     status: 'Active',
     rating: 4.8,
     image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=600',
+    slug: 'bespoke-homemade-mango-pickle',
   },
 ];
 
@@ -232,6 +239,10 @@ const defaultSiteContent = {
   faqImageDesktop: DEFAULT_FAQ_IMAGE_DESKTOP,
   faqImageMobile: DEFAULT_FAQ_IMAGE_MOBILE,
   defaultReviewAvatar: DEFAULT_REVIEW_AVATAR,
+  themeNavy: '#1a234d',
+  themePeach: '#f5b075',
+  themeBg: '#fef8f2',
+  themeAccent: '#f5b075',
 };
 
 async function main() {
@@ -249,10 +260,12 @@ async function main() {
 
   for (const prod of defaultProducts) {
     const { id, ...data } = prod;
+    const slug = prod.slug || slugify(prod.name);
+    const images = prod.image ? [prod.image] : [];
     await prisma.product.upsert({
       where: { id },
-      create: prod,
-      update: data,
+      create: { ...prod, slug, images },
+      update: { ...data, slug, images },
     });
   }
   console.log(`✅ ${defaultProducts.length} products seeded`);

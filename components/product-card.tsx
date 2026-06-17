@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Product } from '@/lib/types';
 import { GlowButton } from '@/components/glow-button';
 import { FreeDeliveryBadge } from '@/components/free-delivery-badge';
@@ -12,6 +13,7 @@ interface ProductCardProps {
   product: Product;
   categoryLabel: string;
   index?: number;
+  productHref?: string;
   onAddToCart: () => void;
   onImageClick?: () => void;
 }
@@ -20,6 +22,7 @@ export function ProductCard({
   product,
   categoryLabel,
   index = 0,
+  productHref,
   onAddToCart,
   onImageClick,
 }: ProductCardProps) {
@@ -42,29 +45,39 @@ export function ProductCard({
       <>৳{product.price.toLocaleString('bn-BD')}</>
     );
 
+  const imageBlock = (
+    <>
+      <Image
+        src={product.image}
+        alt={product.nameBn || product.name}
+        width={240}
+        height={240}
+        className="pc-thumbnail-img"
+        referrerPolicy="no-referrer"
+        sizes="(max-width: 640px) 92vw, 240px"
+      />
+      {product.freeShipping && (
+        <span className="pc-free-delivery">
+          <FreeDeliveryBadge />
+        </span>
+      )}
+    </>
+  );
+
   return (
     <section className="pc-card" style={{ '--product-card--accent': accent } as React.CSSProperties}>
-      {onImageClick ? (
+      {productHref ? (
+        <Link href={productHref} className="pc-thumbnail-stack pc-thumbnail-stack--clickable block">
+          {imageBlock}
+        </Link>
+      ) : onImageClick ? (
         <button
           type="button"
           onClick={onImageClick}
           className="pc-thumbnail-stack pc-thumbnail-stack--clickable"
           aria-label={`${product.nameBn || product.name} — ${t.viewDetails}`}
         >
-          <Image
-            src={product.image}
-            alt={product.nameBn || product.name}
-            width={240}
-            height={240}
-            className="pc-thumbnail-img"
-            referrerPolicy="no-referrer"
-            sizes="(max-width: 640px) 92vw, 240px"
-          />
-          {product.freeShipping && (
-            <span className="pc-free-delivery">
-              <FreeDeliveryBadge />
-            </span>
-          )}
+          {imageBlock}
         </button>
       ) : (
         <div className="pc-thumbnail-stack">
@@ -87,7 +100,13 @@ export function ProductCard({
 
       <p className="pc-category">{categoryLabel}</p>
 
-      <h2 className="pc-heading">{product.nameBn || product.name}</h2>
+      {productHref ? (
+        <Link href={productHref} className="pc-heading hover:text-[var(--kf-primary)] transition">
+          {product.nameBn || product.name}
+        </Link>
+      ) : (
+        <h2 className="pc-heading">{product.nameBn || product.name}</h2>
+      )}
 
       <p className="pc-price">{priceLabel}</p>
 

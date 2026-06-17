@@ -165,6 +165,12 @@
   line-height: 1.25;
   padding-block: calc(var(--_row-gap) * 2);
   margin: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+a.pc-heading:hover {
+  color: var(--kf-primary);
 }
 
 .product-cards .pc-price {

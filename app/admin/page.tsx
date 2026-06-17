@@ -69,6 +69,9 @@ import {
 } from '@/lib/types';
 import { AdminOrderNotification } from '@/components/admin-order-notification';
 import { ImageUploadField } from '@/components/image-upload-field';
+import { MultiImageUploadField } from '@/components/multi-image-upload-field';
+import { slugify } from '@/lib/slug';
+import { getProductImages } from '@/lib/product-helpers';
 import { compressImageForUpload } from '@/lib/compress-image';
 import {
   ADMIN_TAB_TITLES,
@@ -110,6 +113,7 @@ export default function AdminDashboardPage() {
   // Dialog states for Product
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  const [productSlugEdited, setProductSlugEdited] = useState(false);
 
   // Dialog states for Category
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
@@ -1068,8 +1072,9 @@ export default function AdminDashboardPage() {
               <button
                 onClick={() => {
                   setEditingProduct({
-                    name: '', price: 0, discount: 0, description: '', category: adminData.categories[0]?.name || '', stock: 999, status: 'Active', image: '', freeShipping: false
+                    name: '', price: 0, discount: 0, description: '', category: adminData.categories[0]?.name || '', stock: 999, status: 'Active', image: '', images: [], slug: '', freeShipping: false
                   });
+                  setProductSlugEdited(false);
                   setShowProductDialog(true);
                 }}
                 className="bg-[#1a234d] hover:bg-black text-white px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition flex items-center gap-1 shadow-md shadow-[#1a234d]/20"
@@ -1123,6 +1128,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => {
                                 setEditingProduct(p);
+                                setProductSlugEdited(true);
                                 setShowProductDialog(true);
                               }}
                               className="p-2 hover:bg-blue-50 text-stone-600 hover:text-blue-600 rounded-lg transition"
@@ -1977,6 +1983,56 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
+                {/* 5. THEME COLORS */}
+                <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100 space-y-6">
+                  <div>
+                    <h4 className="font-serif text-lg font-bold text-stone-900">5. Website Theme Colors</h4>
+                    <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">
+                      পুরো সাইটের রঙ পরিবর্তন — Navy, Peach, Background, Accent
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {(
+                      [
+                        ['themeNavy', 'Primary Navy', '#1a234d'],
+                        ['themePeach', 'Peach Accent', '#f5b075'],
+                        ['themeBg', 'Page Background', '#fef8f2'],
+                        ['themeAccent', 'Button Accent', '#f5b075'],
+                      ] as const
+                    ).map(([field, label, fallback]) => (
+                      <div key={field}>
+                        <label className="block text-[10px] uppercase font-black text-stone-500 mb-1.5">
+                          {label}
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={(adminData.siteContent[field] as string) || fallback}
+                            onChange={(e) =>
+                              setAdminData({
+                                ...adminData,
+                                siteContent: { ...adminData.siteContent, [field]: e.target.value },
+                              })
+                            }
+                            className="w-10 h-10 rounded-lg border border-stone-200 cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={(adminData.siteContent[field] as string) || fallback}
+                            onChange={(e) =>
+                              setAdminData({
+                                ...adminData,
+                                siteContent: { ...adminData.siteContent, [field]: e.target.value },
+                              })
+                            }
+                            className="flex-1 text-[11px] font-mono px-2 py-2 rounded-lg border border-stone-200 bg-white"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="pt-6 border-t flex justify-end">
                   <button
                     type="submit"
@@ -2573,9 +2629,40 @@ export default function AdminDashboardPage() {
                     required
                     placeholder="Mustard oil, Royal honey mixed nuts, etc."
                     value={editingProduct.name || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setEditingProduct((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              name,
+                              slug: productSlugEdited ? prev.slug : slugify(name),
+                            }
+                          : prev
+                      );
+                    }}
                     className="w-full text-stone-800 bg-stone-50 border border-stone-200 text-sm px-4 py-3 rounded-xl focus:outline-none"
                   />
+                </div>
+
+                <div>
+                  <label className="block uppercase font-bold tracking-widest text-stone-500 mb-1 leading-none">
+                    URL Slug
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="product-url-slug"
+                    value={editingProduct.slug || ''}
+                    onChange={(e) => {
+                      setProductSlugEdited(true);
+                      setEditingProduct({ ...editingProduct, slug: slugify(e.target.value) });
+                    }}
+                    className="w-full text-stone-800 bg-stone-50 border border-stone-200 text-sm px-4 py-3 rounded-xl focus:outline-none font-mono"
+                  />
+                  <p className="text-[9px] text-stone-400 mt-1">
+                    URL: /category-slug/{editingProduct.slug || 'your-slug'}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -2640,19 +2727,31 @@ export default function AdminDashboardPage() {
                   </span>
                 </label>
 
-                <ImageUploadField
-                  label="Product Display Image"
-                  value={editingProduct.image || ''}
-                  onValueChange={(url) => setEditingProduct({ ...editingProduct, image: url })}
+                <MultiImageUploadField
+                  label="Product Images (multiple)"
+                  images={editingProduct.images || getProductImages(editingProduct as Product)}
+                  mainImage={editingProduct.image || ''}
+                  onChange={(images, mainImage) =>
+                    setEditingProduct({ ...editingProduct, images, image: mainImage })
+                  }
                   onUpload={(file) =>
-                    handleImageUpload(file, (url) =>
-                      setEditingProduct((prev) => (prev ? { ...prev, image: url } : prev)),
-                      'product-image'
+                    handleImageUpload(
+                      file,
+                      (url) =>
+                        setEditingProduct((prev) => {
+                          if (!prev) return prev;
+                          const list = [...(prev.images || (prev.image ? [prev.image] : [])), url];
+                          const unique = [...new Set(list.filter(Boolean))];
+                          return {
+                            ...prev,
+                            images: unique,
+                            image: prev.image || url,
+                          };
+                        }),
+                      'product-multi'
                     )
                   }
-                  uploading={uploadingImage === 'product-image'}
-                  required
-                  urlPlaceholder="https://images.unsplash.com/promo-honey-photo"
+                  uploading={uploadingImage === 'product-multi'}
                 />
 
                 <div>

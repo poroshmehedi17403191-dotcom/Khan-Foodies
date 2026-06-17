@@ -158,13 +158,17 @@ export async function saveProductAction(password: string, productData: Record<st
     const product = await db.saveProduct({
       id: productData.id as string | undefined,
       name: productData.name as string,
+      nameBn: productData.nameBn as string | undefined,
+      slug: productData.slug as string | undefined,
       price: Number(productData.price),
       discount: Number(productData.discount || 0),
       description: (productData.description as string) || '',
+      descriptionBn: productData.descriptionBn as string | undefined,
       category: productData.category as string,
       stock: Number(productData.stock || 0),
       status: (productData.status as 'Active' | 'Draft') || 'Active',
       image: productData.image as string,
+      images: (productData.images as string[]) || [],
       freeShipping: Boolean(productData.freeShipping),
     });
 

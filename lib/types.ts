@@ -10,6 +10,7 @@ export interface Product {
   id: string;
   name: string;
   nameBn?: string;
+  slug?: string;
   price: number;
   discount: number;
   description: string;
@@ -19,6 +20,7 @@ export interface Product {
   status: 'Active' | 'Draft';
   rating: number;
   image: string;
+  images?: string[];
   freeShipping?: boolean;
 }
 
@@ -128,4 +130,9 @@ export interface SiteContent {
   faqImageDesktop?: string;
   faqImageMobile?: string;
   defaultReviewAvatar?: string;
+
+  themeNavy?: string;
+  themePeach?: string;
+  themeBg?: string;
+  themeAccent?: string;
 }
