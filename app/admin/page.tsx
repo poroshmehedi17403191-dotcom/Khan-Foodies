@@ -10,6 +10,8 @@ import {
   FileText,
   Lock,
   LogOut,
+  Mail,
+  Phone,
   Plus,
   Edit,
   Trash2,
@@ -72,6 +74,7 @@ import { ImageUploadField } from '@/components/image-upload-field';
 import { MultiImageUploadField } from '@/components/multi-image-upload-field';
 import { slugify } from '@/lib/slug';
 import { getProductImages } from '@/lib/product-helpers';
+import { DEFAULT_THEME } from '@/lib/theme';
 import { compressImageForUpload } from '@/lib/compress-image';
 import {
   ADMIN_TAB_TITLES,
@@ -81,6 +84,8 @@ import {
 } from '@/lib/admin-tabs';
 
 export default function AdminDashboardPage() {
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPhone, setAdminPhone] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminData, setAdminData] = useState<{
@@ -289,17 +294,28 @@ export default function AdminDashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) {
-      showToast('Please type password', 'error');
+    if (!adminEmail.trim() || !adminPhone.trim() || !password) {
+      showToast('Email, phone ও password দিন', 'error');
       return;
     }
-    refreshAdminData(password);
+
+    setLoading(true);
+    const auth = await verifyAdminPassword(adminEmail, adminPhone, password);
+    if (!auth.success) {
+      showToast(auth.error || 'Access Denied', 'error');
+      setLoading(false);
+      return;
+    }
+
+    await refreshAdminData(password);
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setAdminEmail('');
+    setAdminPhone('');
     setPassword('');
     setAdminData(null);
     localStorage.removeItem('khanfoods_admin_key');
@@ -716,13 +732,50 @@ export default function AdminDashboardPage() {
           <form onSubmit={handleLoginSubmit} className="space-y-5">
             <div>
               <label className="block text-xs uppercase font-extrabold tracking-widest text-[#111827] mb-1.5">
-                Secret Access Code
+                Super Admin Email
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  autoComplete="username"
+                  placeholder="your@email.com"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  className="w-full text-stone-800 bg-stone-50 border border-stone-200 text-sm px-4 py-3 pl-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a234d]/20 focus:border-[#1a234d] transition"
+                />
+                <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-400" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase font-extrabold tracking-widest text-[#111827] mb-1.5">
+                Super Admin Phone
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  required
+                  autoComplete="tel"
+                  placeholder="01XXXXXXXXX"
+                  value={adminPhone}
+                  onChange={(e) => setAdminPhone(e.target.value)}
+                  className="w-full text-stone-800 bg-stone-50 border border-stone-200 text-sm px-4 py-3 pl-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a234d]/20 focus:border-[#1a234d] transition"
+                />
+                <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-400" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase font-extrabold tracking-widest text-[#111827] mb-1.5">
+                Super Admin Password
               </label>
               <div className="relative">
                 <input
                   type="password"
                   required
-                  placeholder="Enter secret password..."
+                  autoComplete="current-password"
+                  placeholder="Enter super admin password..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full text-stone-800 bg-stone-50 border border-stone-200 text-sm px-4 py-3 pl-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a234d]/20 focus:border-[#1a234d] transition"
@@ -740,8 +793,8 @@ export default function AdminDashboardPage() {
             </button>
           </form>
 
-          <p className="text-center text-[10px] text-stone-400 mt-6 lowercase">
-            Default Security code is <span className="font-extrabold text-stone-700 uppercase">admin123</span>
+          <p className="text-center text-[10px] text-stone-400 mt-6">
+            Email, phone ও password — তিনটাই .env থেকে verify হয়
           </p>
         </motion.div>
       </div>
@@ -2030,6 +2083,26 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAdminData({
+                          ...adminData,
+                          siteContent: {
+                            ...adminData.siteContent,
+                            themeNavy: DEFAULT_THEME.navy,
+                            themePeach: DEFAULT_THEME.peach,
+                            themeBg: DEFAULT_THEME.bg,
+                            themeAccent: DEFAULT_THEME.accent,
+                          },
+                        })
+                      }
+                      className="text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-lg border border-stone-300 bg-white text-stone-700 hover:bg-stone-100 transition"
+                    >
+                      রঙ রিসেট করুন (Default Theme)
+                    </button>
                   </div>
                 </div>
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendMetaServerEvent } from '@/lib/meta-capi';
+import { verifyAdminSessionPassword } from '@/lib/admin-auth';
 
 /**
  * GET /api/meta-health — verify Meta browser pixel + server-side CAPI.
@@ -7,9 +8,8 @@ import { sendMetaServerEvent } from '@/lib/meta-capi';
  */
 export async function GET(request: Request) {
   const adminKey = request.headers.get('x-admin-key');
-  const expected = process.env.ADMIN_PASSWORD;
 
-  if (!expected || adminKey !== expected) {
+  if (!adminKey || !(await verifyAdminSessionPassword(adminKey))) {
     return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 

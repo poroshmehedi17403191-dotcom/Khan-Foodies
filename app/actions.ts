@@ -5,9 +5,8 @@ import { db } from '@/lib/db';
 import { fileToBase64, uploadToImgBB } from '@/lib/imgbb';
 import { trackMetaPurchase, type MetaBrowserContext } from '@/lib/meta-capi';
 import { DEFAULT_REVIEW_AVATAR } from '@/lib/defaults';
+import { verifyAdminSessionPassword, verifySuperAdminLogin } from '@/lib/admin-auth';
 import type { SiteContent } from '@/lib/types';
-
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 const getCachedStoreData = unstable_cache(
   async () => {
@@ -51,15 +50,12 @@ export async function getStoreData() {
   }
 }
 
-export async function verifyAdminPassword(password: string) {
-  if (password === ADMIN_PASSWORD) {
-    return { success: true };
-  }
-  return { success: false, error: 'Incorrect password' };
+export async function verifyAdminPassword(email: string, phone: string, password: string) {
+  return verifySuperAdminLogin(email, phone, password);
 }
 
 export async function getAdminData(password: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized access' };
   }
 
@@ -150,7 +146,7 @@ export async function placeStoreOrder(
 }
 
 export async function saveProductAction(password: string, productData: Record<string, unknown>) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -181,7 +177,7 @@ export async function saveProductAction(password: string, productData: Record<st
 }
 
 export async function deleteProductAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -196,7 +192,7 @@ export async function deleteProductAction(password: string, id: string) {
 }
 
 export async function saveCategoryAction(password: string, categoryData: Record<string, unknown>) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -217,7 +213,7 @@ export async function saveCategoryAction(password: string, categoryData: Record<
 }
 
 export async function deleteCategoryAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -232,7 +228,7 @@ export async function deleteCategoryAction(password: string, id: string) {
 }
 
 export async function updateOrderStatusAction(password: string, id: string, status: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -246,7 +242,7 @@ export async function updateOrderStatusAction(password: string, id: string, stat
 }
 
 export async function deleteOrderAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -260,7 +256,7 @@ export async function deleteOrderAction(password: string, id: string) {
 }
 
 export async function updateSiteContentAction(password: string, content: SiteContent) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -288,7 +284,7 @@ export async function submitContactAction(contact: { name: string; email: string
 }
 
 export async function getContactMessagesAction(password: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -308,7 +304,7 @@ export async function getContactMessagesAction(password: string) {
 }
 
 export async function deleteContactMessageAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -361,7 +357,7 @@ export async function submitReviewAction(formData: FormData) {
 }
 
 export async function saveReviewAction(password: string, review: import('@/lib/types').Review) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -380,7 +376,7 @@ export async function saveReviewAction(password: string, review: import('@/lib/t
 }
 
 export async function deleteReviewAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -395,7 +391,7 @@ export async function deleteReviewAction(password: string, id: string) {
 }
 
 export async function getOrderUpdatesAction(password: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -414,7 +410,7 @@ export async function getOrderUpdatesAction(password: string) {
 }
 
 export async function uploadImageAction(password: string, formData: FormData) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -448,7 +444,7 @@ export async function uploadImageAction(password: string, formData: FormData) {
 }
 
 export async function saveGalleryItemAction(password: string, item: import('@/lib/types').GalleryItem) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -463,7 +459,7 @@ export async function saveGalleryItemAction(password: string, item: import('@/li
 }
 
 export async function deleteGalleryItemAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -478,7 +474,7 @@ export async function deleteGalleryItemAction(password: string, id: string) {
 }
 
 export async function saveFaqItemAction(password: string, item: import('@/lib/types').FaqItem) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -493,7 +489,7 @@ export async function saveFaqItemAction(password: string, item: import('@/lib/ty
 }
 
 export async function deleteFaqItemAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -511,7 +507,7 @@ export async function saveShippingChargeAction(
   password: string,
   item: import('@/lib/types').ShippingCharge
 ) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -530,7 +526,7 @@ export async function saveShippingChargeAction(
 }
 
 export async function deleteShippingChargeAction(password: string, id: string) {
-  if (password !== ADMIN_PASSWORD) {
+  if (!(await verifyAdminSessionPassword(password))) {
     return { success: false, error: 'Unauthorized' };
   }
 

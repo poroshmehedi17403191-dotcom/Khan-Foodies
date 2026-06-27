@@ -178,3 +178,12 @@ model ContactMessage {
 
   @@map("contact_messages")
 }
+
+model SuperAdmin {
+  id       String @id @default("main") @map("_id")
+  email    String
+  phone    String
+  password String
+
+  @@map("super_admin")
+}

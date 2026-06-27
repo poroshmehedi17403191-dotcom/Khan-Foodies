@@ -1,19 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { GlowLink } from '@/components/glow-button';
 import { HeroInteractiveBg } from '@/components/hero-interactive-bg';
 import { t } from '@/lib/i18n-bn';
-
-const FALLBACK_IMAGES = [
-  'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1595981267035-7b04ec82a897?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1591073113125-e46713c829ed?auto=format&fit=crop&w=900&q=80',
-];
 
 const SLIDE_INTERVAL_MS = 5000;
 
@@ -24,19 +16,20 @@ interface HeroSectionProps {
 }
 
 function HeroImageSlider({ slides }: { slides: string[] }) {
+  const uniqueSlides = useMemo(
+    () => slides.map((url) => url.trim()).filter(Boolean).filter((url, i, arr) => arr.indexOf(url) === i),
+    [slides]
+  );
+
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  const goTo = useCallback(
-    (next: number) => {
-      if (slides.length === 0) return;
-      setIndex(((next % slides.length) + slides.length) % slides.length);
-    },
-    [slides.length]
-  );
+  useEffect(() => {
+    setIndex(0);
+  }, [uniqueSlides.join('|')]);
 
   useEffect(() => {
-    if (slides.length <= 1 || paused) return;
+    if (uniqueSlides.length <= 1 || paused) return;
 
     const prefersReduced =
       typeof window !== 'undefined' &&
@@ -44,54 +37,51 @@ function HeroImageSlider({ slides }: { slides: string[] }) {
     if (prefersReduced) return;
 
     const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % slides.length);
+      setIndex((i) => (i + 1) % uniqueSlides.length);
     }, SLIDE_INTERVAL_MS);
 
     return () => window.clearInterval(id);
-  }, [slides.length, paused]);
+  }, [uniqueSlides.length, uniqueSlides.join('|'), paused]);
 
-  if (slides.length === 0) return null;
+  if (uniqueSlides.length === 0) return null;
 
   return (
     <div
       className="relative w-full max-w-[280px] sm:max-w-xs md:max-w-sm aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-white/25 shrink-0 mx-auto md:mx-0"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
       aria-roledescription="carousel"
       aria-label="Hero product gallery"
     >
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={slides[index]}
-          initial={{ opacity: 0, scale: 1.03 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.55, ease: 'easeInOut' }}
-          className="absolute inset-0"
+      {uniqueSlides.map((src, i) => (
+        <div
+          key={`${i}-${src}`}
+          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            i === index ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+          }`}
+          aria-hidden={i !== index}
         >
           <Image
-            src={slides[index]}
+            src={src}
             alt=""
             fill
             className="object-cover"
             referrerPolicy="no-referrer"
-            priority={index === 0}
+            priority={i === 0}
             sizes="(max-width: 768px) 280px, 384px"
           />
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      ))}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-[#1a234d]/35 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#1a234d]/35 via-transparent to-transparent pointer-events-none z-20" />
 
-      {slides.length > 1 && (
-        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
-          {slides.map((_, i) => (
+      {uniqueSlides.length > 1 && (
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-30">
+          {uniqueSlides.map((_, i) => (
             <button
               key={i}
               type="button"
-              onClick={() => goTo(i)}
+              onClick={() => setIndex(i)}
               aria-label={`Slide ${i + 1}`}
               aria-current={i === index ? 'true' : undefined}
               className={`h-1.5 rounded-full transition-all ${
@@ -106,8 +96,7 @@ function HeroImageSlider({ slides }: { slides: string[] }) {
 }
 
 export function HeroSection({ headline, subheadline, images = [] }: HeroSectionProps) {
-  const uploaded = images.filter((url): url is string => Boolean(url?.trim()));
-  const heroSlides = uploaded.length > 0 ? uploaded : FALLBACK_IMAGES;
+  const heroSlides = images.filter((url): url is string => Boolean(url?.trim()));
 
   return (
     <section className="hero-section font-[family-name:var(--font-poppins)]">

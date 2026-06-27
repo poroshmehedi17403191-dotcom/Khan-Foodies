@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { Search } from 'lucide-react';
 import { FaqItem } from '@/lib/types';
 import { t } from '@/lib/i18n-bn';
-import { DEFAULT_FAQ_IMAGE_DESKTOP, DEFAULT_FAQ_IMAGE_MOBILE } from '@/lib/defaults';
 
 interface FaqSectionProps {
   items: FaqItem[];
@@ -39,8 +38,9 @@ export function FaqSection({ items, imageDesktop, imageMobile }: FaqSectionProps
     setOpenId((prev) => (prev === id ? null : id));
   };
 
-  const faqDesktop = imageDesktop || DEFAULT_FAQ_IMAGE_DESKTOP;
-  const faqMobile = imageMobile || DEFAULT_FAQ_IMAGE_MOBILE;
+  const faqDesktop = imageDesktop?.trim() || '';
+  const faqMobile = imageMobile?.trim() || '';
+  const hasFaqImage = Boolean(faqDesktop || faqMobile);
 
   return (
     <section id="faq" className="py-16 md:py-20 kf-section-card border-t">
@@ -65,25 +65,31 @@ export function FaqSection({ items, imageDesktop, imageMobile }: FaqSectionProps
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:space-x-8 md:mt-16 mt-8 gap-10 md:gap-0">
-          <div className="md:w-5/12 lg:w-4/12 w-full">
-            <Image
-              src={faqDesktop}
-              alt={t.faqImageAlt}
-              width={600}
-              height={800}
-              className="w-full hidden md:block rounded-lg object-cover"
-            />
-            <Image
-              src={faqMobile}
-              alt={t.faqImageAlt}
-              width={600}
-              height={400}
-              className="w-full md:hidden block rounded-lg object-cover"
-            />
-          </div>
+        <div className={`flex flex-col md:flex-row md:space-x-8 md:mt-16 mt-8 gap-10 md:gap-0 ${hasFaqImage ? '' : 'md:max-w-3xl'}`}>
+          {hasFaqImage && (
+            <div className="md:w-5/12 lg:w-4/12 w-full">
+              {faqDesktop && (
+                <Image
+                  src={faqDesktop}
+                  alt={t.faqImageAlt}
+                  width={600}
+                  height={800}
+                  className="w-full hidden md:block rounded-lg object-cover"
+                />
+              )}
+              {faqMobile && (
+                <Image
+                  src={faqMobile}
+                  alt={t.faqImageAlt}
+                  width={600}
+                  height={400}
+                  className="w-full md:hidden block rounded-lg object-cover"
+                />
+              )}
+            </div>
+          )}
 
-          <div className="md:w-7/12 lg:w-8/12 w-full md:mt-0">
+          <div className={hasFaqImage ? 'md:w-7/12 lg:w-8/12 w-full md:mt-0' : 'w-full'}>
             {filtered.length === 0 ? (
               <p className="text-slate-500 dark:text-white/70 text-sm py-8">{t.faqNoResults}</p>
             ) : (

@@ -2,10 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { Review } from '@/lib/types';
 import { t } from '@/lib/i18n-bn';
-import { DEFAULT_REVIEW_AVATAR } from '@/lib/defaults';
 
 interface ReviewSliderProps {
   reviews: Review[];
@@ -96,14 +95,20 @@ export function ReviewSlider({ reviews }: ReviewSliderProps) {
                     className={`details text-sm flex flex-col items-center gap-2 mt-6 transition-all duration-500
                       ${hidden ? 'translate-y-[150px] scale-0' : 'translate-y-0 scale-100'}`}
                   >
-                    <Image
-                      src={review.image || DEFAULT_REVIEW_AVATAR}
-                      alt={review.name}
-                      width={64}
-                      height={64}
-                      className="w-16 h-16 object-cover rounded-full"
-                      referrerPolicy="no-referrer"
-                    />
+                    {review.image?.trim() ? (
+                      <Image
+                        src={review.image}
+                        alt={review.name}
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 object-cover rounded-full"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-[var(--kf-primary-light)] text-[var(--kf-primary)] flex items-center justify-center">
+                        <User className="w-7 h-7" />
+                      </div>
+                    )}
                     <div className="text-center">
                       <p className="text-sm font-bold text-slate-900">{review.name}</p>
                       <p className="text-xs text-slate-500">

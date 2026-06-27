@@ -1,10 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import {
-  DEFAULT_FAQ_IMAGE_DESKTOP,
-  DEFAULT_FAQ_IMAGE_MOBILE,
-  DEFAULT_HERO_IMAGES,
-  DEFAULT_REVIEW_AVATAR,
-} from '../lib/defaults';
 import { slugify } from '../lib/slug';
 
 const prisma = new PrismaClient();
@@ -207,18 +201,18 @@ const defaultSiteContent = {
   aboutTitleBn: 'আমাদের বিশুদ্ধ আমের গ্যারান্টি ও মিশন',
   aboutText: 'Khan Foods provides handpicked premium-grade mangoes and organic fruit solutions directly from naturally grown orchards in Rajshahi and Chapainawabganj.',
   aboutTextBn: 'খান ফুডস সরাসরি রাজশাহী ও চাঁপাইনবাবগঞ্জের অরগানিক বাগান থেকে পরম যত্নে সংগৃহীত প্রিমিয়াম কোয়ালিটির আসল মিষ্টি আম পৌঁছে দেয়।',
-  aboutImage: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&q=80&w=1000',
-  bannerImage1: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&q=80&w=1000',
+  aboutImage: '',
+  bannerImage1: '',
   bannerTagline1: 'SENSATIONAL HIMSAGAR',
   bannerTagline1Bn: 'আমের রাজা রাজশাহী থেকে',
   bannerTitle1: 'Rajshahi Premium Ripe Himsagar Mango',
   bannerTitle1Bn: 'প্রিমিয়াম রসাল ও মিষ্টি হিমসাগর আম',
-  bannerImage2: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&q=80&w=1000',
+  bannerImage2: '',
   bannerTagline2: 'ORGANIC AMRAPALI CROP',
   bannerTagline2Bn: 'সেরা স্বাদের শতভাগ প্রাকৃতিক',
   bannerTitle2: 'Sweet Scented Fiberless Amrapali Mango',
   bannerTitle2Bn: 'ফাইবারমুক্ত পরম সুস্বাদু আম্রপালি আম',
-  bannerImage3: 'https://images.unsplash.com/photo-1591073113125-e46713c829ed?auto=format&fit=crop&q=80&w=1000',
+  bannerImage3: '',
   bannerTagline3: 'TRADITIONAL AMSOTTO BAR',
   bannerTagline3Bn: 'রোদে শুকানো খাঁটি স্বাদ',
   bannerTitle3: 'Pure Organic Sweet Mango Bars (Amsotto)',
@@ -232,13 +226,13 @@ const defaultSiteContent = {
   instagramUrl: 'https://instagram.com/khanfoods',
   footerText: '© 2026 Khan Foods. Crafted for ultimate pure luxury, wholesomeness, and standard-setting dietary health solutions locally.',
   footerTextBn: '© ২০২৬ খান ফুডস। শতভাগ খাঁটি, স্বাস্থ্যকর এবং সুস্বাদু পুষ্টিকর খাদ্যের বিশ্বস্ত ঠিকানা।',
-  heroImage1: DEFAULT_HERO_IMAGES[0],
-  heroImage2: DEFAULT_HERO_IMAGES[1],
-  heroImage3: DEFAULT_HERO_IMAGES[2],
-  heroImage4: DEFAULT_HERO_IMAGES[3],
-  faqImageDesktop: DEFAULT_FAQ_IMAGE_DESKTOP,
-  faqImageMobile: DEFAULT_FAQ_IMAGE_MOBILE,
-  defaultReviewAvatar: DEFAULT_REVIEW_AVATAR,
+  heroImage1: '',
+  heroImage2: '',
+  heroImage3: '',
+  heroImage4: '',
+  faqImageDesktop: '',
+  faqImageMobile: '',
+  defaultReviewAvatar: '',
   themeNavy: '#1a234d',
   themePeach: '#f5b075',
   themeBg: '#fef8f2',
@@ -312,6 +306,22 @@ async function main() {
     update: siteData,
   });
   console.log('✅ Site content seeded');
+
+  await prisma.superAdmin.upsert({
+    where: { id: 'main' },
+    create: {
+      id: 'main',
+      email: 'poroshmehedi17403191@gmail.com',
+      phone: '01731710873',
+      password: '01731710873',
+    },
+    update: {
+      email: 'poroshmehedi17403191@gmail.com',
+      phone: '01731710873',
+      password: '01731710873',
+    },
+  });
+  console.log('✅ Super admin credentials seeded');
 
   const orderCount = await prisma.order.count();
   if (orderCount === 0) {

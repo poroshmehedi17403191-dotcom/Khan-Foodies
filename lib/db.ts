@@ -1,10 +1,5 @@
 import { prisma } from './prisma';
-import {
-  DEFAULT_FAQ_IMAGE_DESKTOP,
-  DEFAULT_FAQ_IMAGE_MOBILE,
-  DEFAULT_HERO_IMAGES,
-  DEFAULT_REVIEW_AVATAR,
-} from './defaults';
+import { DEFAULT_REVIEW_AVATAR } from './defaults';
 import { slugify } from './slug';
 import { normalizeProductImages } from './product-helpers';
 import type {
@@ -144,13 +139,13 @@ function mapSiteContent(s: {
 }): SiteContent {
   return {
     ...s,
-    heroImage1: s.heroImage1 || DEFAULT_HERO_IMAGES[0],
-    heroImage2: s.heroImage2 || DEFAULT_HERO_IMAGES[1],
-    heroImage3: s.heroImage3 || DEFAULT_HERO_IMAGES[2],
-    heroImage4: s.heroImage4 || DEFAULT_HERO_IMAGES[3],
-    faqImageDesktop: s.faqImageDesktop || DEFAULT_FAQ_IMAGE_DESKTOP,
-    faqImageMobile: s.faqImageMobile || DEFAULT_FAQ_IMAGE_MOBILE,
-    defaultReviewAvatar: s.defaultReviewAvatar || DEFAULT_REVIEW_AVATAR,
+    heroImage1: s.heroImage1?.trim() || undefined,
+    heroImage2: s.heroImage2?.trim() || undefined,
+    heroImage3: s.heroImage3?.trim() || undefined,
+    heroImage4: s.heroImage4?.trim() || undefined,
+    faqImageDesktop: s.faqImageDesktop?.trim() || undefined,
+    faqImageMobile: s.faqImageMobile?.trim() || undefined,
+    defaultReviewAvatar: s.defaultReviewAvatar?.trim() || undefined,
   };
 }
 

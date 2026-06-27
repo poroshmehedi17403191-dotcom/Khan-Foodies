@@ -103,30 +103,6 @@ interface ToastMessage {
   type: 'success' | 'error' | 'info';
 }
 
-const defaultBannerSlides = [
-  {
-    image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&q=80&w=1200',
-    titleBn: 'রাজশাহী প্রিমিয়াম হিমসাগর আম',
-    titleEn: 'Rajshahi Premium Himsagar Mango',
-    taglineBn: 'আমের রাজা রাজশাহী থেকে',
-    taglineEn: 'SENSATIONAL HIMSAGAR',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&q=80&w=1200',
-    titleBn: 'অর্গানিক মিষ্টি আম্রপালি আম',
-    titleEn: 'Organic Sweet Amrapali Mango',
-    taglineBn: 'সেরা স্বাদের শতভাগ প্রাকৃতিক',
-    taglineEn: 'ORGANIC AMRAPALI CROP',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1591073113125-e46713c829ed?auto=format&fit=crop&q=80&w=1200',
-    titleBn: 'রয়েল পাকা আমের ঐতিহ্যবাহী আমসত্ত্ব',
-    titleEn: 'Pure Organic Sweet Mango Bars',
-    taglineBn: 'রোদে শুকানো খাঁটি স্বাদ',
-    taglineEn: 'TRADITIONAL AMSOTTO BAR',
-  },
-];
-
 export default function StorefrontPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -510,34 +486,9 @@ export default function StorefrontPage() {
   const headline = siteContent?.heroHeadlineBn || siteContent?.heroHeadline || "খাঁটি ও প্রাকৃতিক প্রিমিয়াম অর্গানিক ফুড স্টোর";
   const subheadline = siteContent?.heroSubheadlineBn || siteContent?.heroSubheadline || "সরাসরি প্রকৃতি থেকে সংগৃহীত শতভাগ খাঁটি মধু, ঘি, বাদাম ও অর্গানিক পণ্য।";
 
-  // Admin-controlled banner slides
-  const bannerSlides = siteContent
-    ? [
-        {
-          image: siteContent.bannerImage1 || defaultBannerSlides[0].image,
-          title: siteContent.bannerTitle1Bn || siteContent.bannerTitle1,
-          tagline: siteContent.bannerTagline1Bn || siteContent.bannerTagline1,
-        },
-        {
-          image: siteContent.bannerImage2 || defaultBannerSlides[1].image,
-          title: siteContent.bannerTitle2Bn || siteContent.bannerTitle2,
-          tagline: siteContent.bannerTagline2Bn || siteContent.bannerTagline2,
-        },
-        {
-          image: siteContent.bannerImage3 || defaultBannerSlides[2].image,
-          title: siteContent.bannerTitle3Bn || siteContent.bannerTitle3,
-          tagline: siteContent.bannerTagline3Bn || siteContent.bannerTagline3,
-        },
-      ]
-    : defaultBannerSlides.map((s) => ({
-        image: s.image,
-        title: s.titleBn,
-        tagline: s.taglineBn,
-      }));
-
   const heroImages = siteContent
     ? [siteContent.heroImage1, siteContent.heroImage2, siteContent.heroImage3, siteContent.heroImage4].filter(
-        (url): url is string => Boolean(url)
+        (url): url is string => Boolean(url?.trim())
       )
     : [];
 
